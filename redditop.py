@@ -6,10 +6,10 @@ sharing the week's top submissions from reddit.
 
 #Standard imports
 import sys
-import os
+# import os
 import json
-import urlparse
-import urllib
+# import urlparse
+# import urllib
 import signal
 #Unused:
 # import string
