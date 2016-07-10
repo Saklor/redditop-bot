@@ -1,20 +1,22 @@
 """
-Redditop Bot v1.0
+Redditop Bot v1.0.
+
 This bot's purpose is to give an inline method of seeing and
 sharing the week's top submissions from reddit.
 """
-#moya pt
-#Standard imports
+
+# moya pt
+# Standard imports
 import sys
 # import os
 import json
 # import urlparse
 # import urllib
 import signal
-#Unused:
+# Unused:
 # import string
 
-#Non Standard Imports
+# Non Standard Imports
 import praw
 import requests
 # from bs4 import BeautifulSoup
@@ -37,11 +39,15 @@ GIF_PATH = 'out.gif'
 UA = "Linux:redditop.telegram:v1.0 (by /u/genericargentine)"
 REDDIT = praw.Reddit(user_agent=UA)
 
+
 def main():
-    """Main update loop"""
-    # Request inicial para limpiar pedidos colgados mientras estuvo apagado el bot.
+    """Main update loop."""
+    # Request inicial para limpiar pedidos
+    # colgados mientras estuvo apagado el bot.
     last_update_id = 0
-    update_request = requests.get(REQUEST_URL + '/getUpdates', params={'timeout' : 0})
+    update_request = requests.get(
+        REQUEST_URL + '/getUpdates',
+        params={'timeout': 0})
     data = json.loads(update_request.text)
 
     if data['ok'] and data['result'] != []:
@@ -50,7 +56,7 @@ def main():
     while True:
         update_request = requests.get(
             REQUEST_URL + '/getUpdates',
-            params={'offset' : last_update_id, 'timeout' : 120})
+            params={'offset': last_update_id, 'timeout': 120})
 
         data = json.loads(update_request.text)
 
@@ -76,7 +82,7 @@ def main():
             else:
                 print 'Unknown update!'
 
-            last_update_id = update_id+1
+            last_update_id = update_id + 1
         elif not data['ok']:
             # Untested!
             print 'Invalid answer sent!'
@@ -96,24 +102,18 @@ def main():
 
 #     return  urlparse.urlunparse(url_parts)
 
-# Deprecated
-# def que_soy(message):
-#     """Maneja la respuesta al comando /queSoy"""
-#     text = message['from']['first_name'] + '? Quien te conoce papa?'
-#     chat_id = message['chat']['id']
-#     if message['from']['first_name'] == 'Matias':
-#         text = 'Tu nombre es Matias, asi que me parece que sos mi creador. Bien ahi!'
-#     bot_send_msg(chat_id, text)
 
 def bot_send_msg(chat_id, text):
-    """Realiza un POST al chat_id indicado con el mensaje text"""
+    """Realiza un POST al chat_id indicado con el mensaje text."""
     requests.post(
         REQUEST_URL + '/sendMessage',
-        data={'chat_id' : chat_id, 'text' : text})
+        data={'chat_id': chat_id, 'text': text})
+
 
 def dame_top(message):
     """
-    Handling del comando /dametop
+    Handling del comando /dametop.
+
     Envia el top weekly post del subreddit indicado por el primer parametro
     """
     text = message['text']
@@ -122,25 +122,30 @@ def dame_top(message):
     link_url = ''
     submission_info = ''
 
-
     if len(text_split) >= 2:
         requested_subreddit = text_split[1]
         try:
             subreddit = REDDIT.get_subreddit(requested_subreddit, fetch=True)
         except praw.errors.HTTPException as http_exception:
             print 'NaS - ' + str(http_exception)
-            bot_send_msg(chat_id, 'No existe ese subreddit aparentemente. ' + str(http_exception))
+            bot_send_msg(
+                chat_id,
+                'No existe ese subreddit aparentemente. ' +
+                str(http_exception))
             return
 
         for submission in subreddit.get_top_from_week(limit=1):
             link_url = submission.url
-            submission_info = '\'' + submission.title + '\'' \
-                            + ' by ' + str(submission.author) \
-                            + ' (' + str(submission.score) + ')'
+            submission_info = '\'' + submission.title + '\'' +\
+                ' by ' + str(submission.author) +\
+                ' (' + str(submission.score) + ')'
 
-        # Dejo esto comentado, pero ahora manda unicamente el submission_info + link
-        # if 'imgur' in link_url and 'gif' not in link_url and '/a/' not in link_url:
-        #     url_parts = list(urlparse.urlparse(link_url))
+        # Dejo esto comentado, pero ahora
+        # manda unicamente el submission_info + link
+        # if 'imgur' in link_url \
+        #     and 'gif' not in link_url \
+        #         and '/a/' not in link_url:
+            # url_parts = list(urlparse.urlparse(link_url))
         #     if 'i.' not in url_parts[1]:
         #         url_parts[1] = "i." + url_parts[1]
         #         url_parts[2] = url_parts[2] + ".jpg"
@@ -160,7 +165,11 @@ def dame_top(message):
         #     os.remove(IMAGE_PATH)
 
         # elif '.gif' in link_url or 'gfycat' in link_url:
-        #     bot_send_msg(chat_id, 'Un gif! ' + submission_info + '  ' + link_url)
+            # bot_send_msg(
+            #     chat_id,
+            #     'Un gif! ' +
+            #     submission_info +
+            #     '  ' + link_url)
         # else:
         bot_send_msg(chat_id, submission_info + '  ' + link_url)
     else:
@@ -178,9 +187,11 @@ def dame_top(message):
 #     gif.write(url_gif.read())
 #     gif.close()
 
+
 def procesar_inline_query(inline_query):
     """
     Handling de los inline querys.
+
     Envia como respuesta los 15 mejores tops de la semana del subreddit
     indicado, con thumnail segun corresponda.
     """
@@ -204,24 +215,24 @@ def procesar_inline_query(inline_query):
         for submission in subreddit.get_top_from_week(limit=15):
             inline_query_result = {}
             submission_info = '\'' + submission.title + '\'' \
-                            + ' by ' + str(submission.author) \
-                            + ' (' + str(submission.score) + ')'
+                + ' by ' + str(submission.author) \
+                + ' (' + str(submission.score) + ')'
             inline_query_result['type'] = 'article'
             inline_query_result['id'] = str(i)
             i += 1
             inline_query_result['title'] = submission.title
             inline_query_result['input_message_content'] = \
-                {'message_text' : submission_info + ' ' + submission.url}
+                {'message_text': submission_info + ' ' + submission.url}
             if not submission.is_self \
                 and str(submission.thumbnail) != 'self' \
                 and str(submission.thumbnail) != 'nsfw' \
-                and str(submission.thumbnail) != 'default':
+                    and str(submission.thumbnail) != 'default':
                 inline_query_result['thumb_url'] = str(submission.thumbnail)
             data.append(inline_query_result)
 
         response = requests.post(
             REQUEST_URL + '/answerInlineQuery',
-            params={'inline_query_id' : query_id, 'results' : json.dumps(data)})
+            params={'inline_query_id': query_id, 'results': json.dumps(data)})
         response_json = json.loads(response.text)
         if not response_json['ok']:
             print 'Invalid answer sent!'
@@ -234,18 +245,17 @@ def procesar_inline_query(inline_query):
 
     elif query == '':
         pass
-        #TODO : Trending subreddits?
+        # TODO : Trending subreddits?
+
 
 def signal_handler(sign, frame):
-    """
-    Manejo del SIGINT para salir de una manera no catastrofica.
-    """
+    """Manejo del SIGINT para salir de una manera no catastrofica."""
     print 'Signal: ' + str(sign)
     print 'Frame : ' + str(frame)
     print 'Ctrl+C pressed. Exiting.'
     sys.exit(0)
 
-#Catch SIGINT using signal_handler
+# Catch SIGINT using signal_handler
 signal.signal(signal.SIGINT, signal_handler)
 
 if __name__ == '__main__':
