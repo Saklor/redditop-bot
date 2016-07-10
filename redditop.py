@@ -21,9 +21,13 @@ import requests
 
 # REQUEST_URL formatting
 if len(sys.argv) == 1:
-    print 'Usage: redditop_bot.py [TOKEN]'
+    print 'Usage: redditop_bot.py [TOKEN_FILE]'
     sys.exit()
-REQUEST_URL = "https://api.telegram.org/bot" + sys.argv[1]
+TOKEN_FILE = open(sys.argv[1], 'r')
+REQUEST_URL = "https://api.telegram.org/bot" + TOKEN_FILE.read()
+TOKEN_FILE.close()
+
+print REQUEST_URL
 
 # Paths
 IMAGE_PATH = 'out.jpg'
@@ -208,8 +212,10 @@ def procesar_inline_query(inline_query):
             inline_query_result['title'] = submission.title
             inline_query_result['input_message_content'] = \
                 {'message_text' : submission_info + ' ' + submission.url}
-            if not submission.is_self and str(submission.thumbnail) != 'self' \
-                and str(submission.thumbnail) != 'nsfw':
+            if not submission.is_self \
+                and str(submission.thumbnail) != 'self' \
+                and str(submission.thumbnail) != 'nsfw' \
+                and str(submission.thumbnail) != 'default':
                 inline_query_result['thumb_url'] = str(submission.thumbnail)
             data.append(inline_query_result)
 
@@ -223,7 +229,8 @@ def procesar_inline_query(inline_query):
             print 'Description: ' + response_json['description']
             if 'THUMB_URL_INVALID' in response_json['description']:
                 for answer in data:
-                    print 'thumb_url: ' + answer['thumb_url']
+                    if 'thumb_url' in answer:
+                        print 'thumb_url: ' + answer['thumb_url']
 
     elif query == '':
         pass
