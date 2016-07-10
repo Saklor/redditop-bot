@@ -8,7 +8,7 @@ Un inline bot de Telegram que funciona como interfaz con Reddit. Por ahora es pr
 
 # Colaboradores
 
-* @nfanta - Nico crack que se puso la diez y me dio acceso a la VPS para tenerlo corriendo siempre, aparte de que me ense\~no banda de cosas y me dio la inspiracion para hacerlo (me dijo eh pajero, hacete un bot)\
+* @nfanta - Nico crack que se puso la diez y me dio acceso a la VPS para tenerlo corriendo siempre, aparte de que me enseño banda de cosas y me dio la inspiracion para hacerlo (me dijo eh pajero, hacete un bot)
 
 # Conclusion
 
