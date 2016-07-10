@@ -56,7 +56,7 @@ def main():
 
             if 'message' in result and 'text' in result['message']:
                 message = result['message']
-                print update_id
+                # print update_id
                 print message['text']
 
                 # Deprecated
@@ -66,7 +66,7 @@ def main():
                 if '/dametop' in message['text'].lower():
                     dame_top(message)
             elif 'inline_query' in result:
-                print update_id
+                # print update_id
                 print result['inline_query']['query']
                 procesar_inline_query(result['inline_query'])
             else:
