@@ -24,7 +24,7 @@ if len(sys.argv) == 1:
     print 'Usage: redditop_bot.py [TOKEN_FILE]'
     sys.exit()
 TOKEN_FILE = open(sys.argv[1], 'r')
-REQUEST_URL = "https://api.telegram.org/bot" + TOKEN_FILE.read()
+REQUEST_URL = "https://api.telegram.org/bot" + TOKEN_FILE.read().rstrip('\n')
 TOKEN_FILE.close()
 
 print REQUEST_URL
