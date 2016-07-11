@@ -130,20 +130,20 @@ def dame_top(message):
             print 'NaS - ' + str(http_exception)
             bot_send_msg(
                 chat_id,
-                'No existe ese subreddit aparentemente.'
+                'No existe ese subreddit aparentemente.')
             return
         except praw.errors.InvalidSubreddit as invalid_subreddit_exception:
             print 'Invalid subreddit - ' + str(invalid_subreddit_exception)
             bot_send_msg(
                 chat_id,
                 'Cualquier cosa ese subreddit, ' +
-                'me hiciste goma las variables.'
+                'me hiciste goma las variables.')
             return
         except:
             print 'UNKNOWN EXCEPTION OCURRED AT INLINE_QUERY'
             bot_send_msg(
                 chat_id,
-                'Se rompio todo mal, no se ni que paso.'
+                'Se rompio todo mal, no se ni que paso.')
             return
 
         for submission in subreddit.get_top_from_week(limit=1):
