@@ -151,12 +151,6 @@ def dame_top(message):
                 chat_id,
                 'No existe ese subreddit aparentemente.')
             return
-        except praw.error.Forbidden as http_error:
-            print ('Forbidden HTTP - ' + str(http_error))
-            bot_send_msg(
-                chat_id,
-                'Estas intentando romperme?')
-            return
         except:
             print ('UNKNOWN EXCEPTION OCURRED AT DAMETOP')
             bot_send_msg(
@@ -164,11 +158,18 @@ def dame_top(message):
                 'Se rompio todo mal, no se ni que paso.')
             return
 
-        for submission in subreddit.get_top_from_week(limit=1):
-            link_url = submission.url
-            submission_info = '\'' + submission.title + '\'' +\
-                ' by ' + str(submission.author) +\
-                ' (' + str(submission.score) + ')'
+        try:
+            for submission in subreddit.get_top_from_week(limit=1):
+                link_url = submission.url
+                submission_info = '\'' + submission.title + '\'' +\
+                    ' by ' + str(submission.author) +\
+                    ' (' + str(submission.score) + ')'
+        except praw.error.Forbidden as http_error:
+            print ('Forbidden HTTP - ' + str(http_error))
+            bot_send_msg(
+                chat_id,
+                'Estas intentando romperme?')
+            return
 
         # Dejo esto comentado, pero ahora
         # manda unicamente el submission_info + link
