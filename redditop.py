@@ -164,7 +164,7 @@ def dame_top(message):
                 submission_info = '\'' + submission.title + '\'' +\
                     ' by ' + str(submission.author) +\
                     ' (' + str(submission.score) + ')'
-        except praw.error.Forbidden as http_error:
+        except praw.errors.Forbidden as http_error:
             print ('Forbidden HTTP - ' + str(http_error))
             bot_send_msg(
                 chat_id,
