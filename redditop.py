@@ -5,31 +5,25 @@ This bot's purpose is to give an inline method of seeing and
 sharing the week's top submissions from reddit.
 """
 
-# moya pt
 # Standard imports
-import sys
-# import os
 import json
-# import urlparse
-# import urllib
 import signal
-# Unused:
-# import string
+import sys
 
 # Non Standard Imports
 import praw
+
 import requests
-# from bs4 import BeautifulSoup
 
 # REQUEST_URL formatting
 if len(sys.argv) == 1:
-    print 'Usage: redditop_bot.py [TOKEN_FILE]'
+    print ('Usage: redditop_bot.py [TOKEN_FILE]')
     sys.exit()
 TOKEN_FILE = open(sys.argv[1], 'r')
 REQUEST_URL = "https://api.telegram.org/bot" + TOKEN_FILE.read().rstrip('\n')
 TOKEN_FILE.close()
 
-print REQUEST_URL
+print (REQUEST_URL)
 
 # Paths
 IMAGE_PATH = 'out.jpg'
@@ -45,12 +39,20 @@ def main():
     # Request inicial para limpiar pedidos
     # colgados mientras estuvo apagado el bot.
     last_update_id = 0
+    validjson = True
     update_request = requests.get(
         REQUEST_URL + '/getUpdates',
         params={'timeout': 0})
-    data = json.loads(update_request.text)
 
-    if data['ok'] and data['result'] != []:
+    try:
+        data = json.loads(update_request.text)
+    except ValueError, e:
+        print "Invalid JSON Object, " + str(e)
+        validjson = False
+    else:
+        validjson = True
+
+    if validjson and data['ok'] and data['result'] != []:
         last_update_id = data['result'][-1]['update_id'] + 1
 
     while True:
@@ -58,16 +60,24 @@ def main():
             REQUEST_URL + '/getUpdates',
             params={'offset': last_update_id, 'timeout': 120})
 
-        data = json.loads(update_request.text)
+        try:
+            data = json.loads(update_request.text)
+        except ValueError, e:
+            print "Invalid JSON Object, " + str(e)
+            validjson = False
+        else:
+            validjson = True
 
-        if data['ok'] and data['result'] != []:
+        if not validjson:
+            print "Invalid JSON"
+        elif data['ok'] and data['result'] != []:
             result = data['result'][0]
             update_id = result['update_id']
 
             if 'message' in result and 'text' in result['message']:
                 message = result['message']
-                # print update_id
-                print message['text']
+                # print (update_id)
+                print (message['text'])
 
                 # Deprecated
                 # if '/quesoy' in message['text'].lower():
@@ -76,18 +86,18 @@ def main():
                 if '/dametop' in message['text'].lower():
                     dame_top(message)
             elif 'inline_query' in result:
-                # print update_id
-                print result['inline_query']['query']
+                # print (update_id)
+                print (result['inline_query']['query'])
                 procesar_inline_query(result['inline_query'])
             else:
-                print 'Unknown update!'
+                print ('Unknown update!')
 
             last_update_id = update_id + 1
         elif not data['ok']:
             # Untested!
-            print 'Invalid answer sent!'
-            print 'Error code: ' + str(data['error_code'])
-            print 'Description: ' + data['description']
+            print ('Invalid answer sent!')
+            print ('Error code: ' + str(data['error_code']))
+            print ('Description: ' + data['description'])
         else:
             # Timeout, nada que hacer
             pass
@@ -127,20 +137,19 @@ def dame_top(message):
         try:
             subreddit = REDDIT.get_subreddit(requested_subreddit, fetch=True)
         except praw.errors.HTTPException as http_exception:
-            print 'NaS - ' + str(http_exception)
+            print ('NaS - ' + str(http_exception))
             bot_send_msg(
                 chat_id,
                 'No existe ese subreddit aparentemente.')
             return
         except praw.errors.InvalidSubreddit as invalid_subreddit_exception:
-            print 'Invalid subreddit - ' + str(invalid_subreddit_exception)
+            print ('Invalid subreddit - ' + str(invalid_subreddit_exception))
             bot_send_msg(
                 chat_id,
-                'Cualquier cosa ese subreddit, ' +
-                'me hiciste goma las variables.')
+                'No existe ese subreddit aparentemente.')
             return
         except:
-            print 'UNKNOWN EXCEPTION OCURRED AT INLINE_QUERY'
+            print ('UNKNOWN EXCEPTION OCURRED AT INLINE_QUERY')
             bot_send_msg(
                 chat_id,
                 'Se rompio todo mal, no se ni que paso.')
@@ -213,13 +222,13 @@ def procesar_inline_query(inline_query):
         try:
             subreddit = REDDIT.get_subreddit(query, fetch=True)
         except praw.errors.HTTPException as http_exception:
-            print 'NaS - ' + str(http_exception)
+            print ('NaS - ' + str(http_exception))
             return
         except praw.errors.InvalidSubreddit as invalid_subreddit_exception:
-            print 'Invalid subreddit - ' + str(invalid_subreddit_exception)
+            print ('Invalid subreddit - ' + str(invalid_subreddit_exception))
             return
         except:
-            print 'UNKNOWN EXCEPTION OCURRED AT INLINE_QUERY'
+            print ('UNKNOWN EXCEPTION OCURRED AT INLINE_QUERY')
             return
 
         data = []
@@ -247,13 +256,13 @@ def procesar_inline_query(inline_query):
             params={'inline_query_id': query_id, 'results': json.dumps(data)})
         response_json = json.loads(response.text)
         if not response_json['ok']:
-            print 'Invalid answer sent!'
-            print 'Error code: ' + str(response_json['error_code'])
-            print 'Description: ' + response_json['description']
+            print ('Invalid answer sent!')
+            print ('Error code: ' + str(response_json['error_code']))
+            print ('Description: ' + response_json['description'])
             if 'THUMB_URL_INVALID' in response_json['description']:
                 for answer in data:
                     if 'thumb_url' in answer:
-                        print 'thumb_url: ' + answer['thumb_url']
+                        print ('thumb_url: ' + answer['thumb_url'])
 
     elif query == '':
         pass
@@ -262,9 +271,9 @@ def procesar_inline_query(inline_query):
 
 def signal_handler(sign, frame):
     """Manejo del SIGINT para salir de una manera no catastrofica."""
-    print 'Signal: ' + str(sign)
-    print 'Frame : ' + str(frame)
-    print 'Ctrl+C pressed. Exiting.'
+    print ('Signal: ' + str(sign))
+    print ('Frame : ' + str(frame))
+    print ('Ctrl+C pressed. Exiting.')
     sys.exit(0)
 
 # Catch SIGINT using signal_handler
