@@ -151,8 +151,14 @@ def dame_top(message):
                 chat_id,
                 'No existe ese subreddit aparentemente.')
             return
+        except praw.error.Forbidden as http_error:
+            print ('Forbidden HTTP - ' + str(http_error))
+            bot_send_msg(
+                chat_id,
+                'Estas intentando romperme?')
+            return
         except:
-            print ('UNKNOWN EXCEPTION OCURRED AT INLINE_QUERY')
+            print ('UNKNOWN EXCEPTION OCURRED AT DAMETOP')
             bot_send_msg(
                 chat_id,
                 'Se rompio todo mal, no se ni que paso.')
