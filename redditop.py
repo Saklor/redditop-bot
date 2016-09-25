@@ -77,7 +77,10 @@ def main():
             if 'message' in result and 'text' in result['message']:
                 message = result['message']
                 # print (update_id)
-                print (message['text'])
+                try:
+                    print (message['text'])
+                except:
+                    print "Oops, no pude imprimir el texto."
 
                 # Deprecated
                 # if '/quesoy' in message['text'].lower():
