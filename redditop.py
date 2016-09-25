@@ -170,6 +170,11 @@ def dame_top(message):
                 chat_id,
                 'Estas intentando romperme?')
             return
+        except:
+            bot_send_msg(
+                chat_id,
+                'Deja de mandarme cosas raras pls.')
+            return
 
         # Dejo esto comentado, pero ahora
         # manda unicamente el submission_info + link
