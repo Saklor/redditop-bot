@@ -31,7 +31,9 @@ GIF_PATH = 'out.gif'
 
 # Reddit PRAW initialization
 UA = "Linux:redditop.telegram:v1.0 (by /u/genericargentine)"
-REDDIT = praw.Reddit(user_agent=UA)
+REDDIT = praw.Reddit(client_id='JPwiqtbkXnI2tg',
+                     client_secret='GYCW_QMY3t3vD5uTw91lYQLQYSk',
+                     user_agent=UA)
 
 
 def main():
@@ -76,20 +78,14 @@ def main():
 
             if 'message' in result and 'text' in result['message']:
                 message = result['message']
-                # print (update_id)
                 try:
                     print (message['text'])
                 except:
                     print "Oops, no pude imprimir el texto."
 
-                # Deprecated
-                # if '/quesoy' in message['text'].lower():
-                #     que_soy(message)
-
                 if '/dametop' in message['text'].lower():
                     dame_top(message)
             elif 'inline_query' in result:
-                # print (update_id)
                 print (result['inline_query']['query'])
                 procesar_inline_query(result['inline_query'])
             else:
@@ -105,22 +101,73 @@ def main():
             # Timeout, nada que hacer
             pass
 
-# Unused
-# def add_params(url, params):
-#     url_parts = list(urlparse.urlparse(url))
-#     query = dict(urlparse.parse_qsl(url_parts[4]))
-#     query.update(params)
-
-#     url_parts[4] = urllib.urlencode(query)
-
-#     return  urlparse.urlunparse(url_parts)
-
 
 def bot_send_msg(chat_id, text):
     """Realiza un POST al chat_id indicado con el mensaje text."""
     requests.post(
         REQUEST_URL + '/sendMessage',
         data={'chat_id': chat_id, 'text': text})
+
+
+def fetch_subreddit(query):
+    subreddit = None
+    try:
+        subreddit = REDDIT.subreddit(query)
+    except praw.exceptions.APIException as api_exception:
+        print ('API Exception - ' + str(api_exception))
+    except praw.exceptions.ClientException as client_exception:
+        print ('Client Exception - ' + str(client_exception))
+    # except praw.exceptions.PRAWException as praw_exception:
+    #     print ('PRAW Exception - ' + str(praw_exception))
+    except:
+        print ('Unknown exception when fetching ' + str(query))
+    return subreddit
+
+
+def fetch_submissions(subreddit, lim=1):
+    submissions = []
+    try:
+        submissions = subreddit.top('week', limit=lim)
+    except praw.exceptions.APIException as api_exception:
+        print ('API Exception - ' + str(api_exception))
+    except praw.exceptions.ClientException as client_exception:
+        print ('Client Exception - ' + str(client_exception))
+    # except praw.exceptions.PRAWException as praw_exception:
+    #     print ('PRAW Exception - ' + str(praw_exception))
+    except:
+        print ('Unknown exception when fetching submissions from subreddit ' + str(subreddit.display_name))
+
+    try:
+        submissions = [subm for subm in submissions]
+    except:
+        submissions = []
+        print ('Exception parsing submissions from subreddit ' + str(subreddit.display_name))
+
+    return submissions
+
+def get_inline_list_from_subreddit(subreddit):
+    data = []
+    i = 1
+    submissions = fetch_submissions(subreddit, 15)
+    for submission in submissions:
+        inline_query_result = {}
+        submission_info = '\'' + submission.title + '\'' +\
+                ' by ' + str(submission.author) +\
+                ' (' + str(submission.score) + ')'
+        inline_query_result['type'] = 'article'
+        inline_query_result['id'] = str(i)
+        i += 1
+        inline_query_result['title'] = submission.title
+        inline_query_result['input_message_content'] = \
+            {'message_text': submission_info + '  ' + submission.url}
+        if not submission.is_self \
+            and str(submission.thumbnail) != 'self' \
+            and str(submission.thumbnail) != 'nsfw' \
+                and str(submission.thumbnail) != 'default':
+            inline_query_result['thumb_url'] = str(submission.thumbnail)
+        data.append(inline_query_result)
+
+    return data
 
 
 def dame_top(message):
@@ -137,91 +184,23 @@ def dame_top(message):
 
     if len(text_split) >= 2:
         requested_subreddit = text_split[1]
-        try:
-            subreddit = REDDIT.get_subreddit(requested_subreddit, fetch=True)
-        except praw.errors.HTTPException as http_exception:
-            print ('NaS - ' + str(http_exception))
-            bot_send_msg(
-                chat_id,
-                'No existe ese subreddit aparentemente.')
-            return
-        except praw.errors.InvalidSubreddit as invalid_subreddit_exception:
-            print ('Invalid subreddit - ' + str(invalid_subreddit_exception))
-            bot_send_msg(
-                chat_id,
-                'No existe ese subreddit aparentemente.')
-            return
-        except:
-            print ('UNKNOWN EXCEPTION OCURRED AT DAMETOP')
-            bot_send_msg(
-                chat_id,
-                'Se rompio todo mal, no se ni que paso.')
+        subreddit = fetch_subreddit(requested_subreddit)
+        if subreddit is None:
             return
 
-        try:
-            for submission in subreddit.get_top_from_week(limit=1):
-                link_url = submission.url
-                submission_info = '\'' + submission.title + '\'' +\
-                    ' by ' + str(submission.author) +\
-                    ' (' + str(submission.score) + ')'
-        except praw.errors.Forbidden as http_error:
-            print ('Forbidden HTTP - ' + str(http_error))
-            bot_send_msg(
-                chat_id,
-                'Estas intentando romperme?')
-            return
-        except:
-            bot_send_msg(
-                chat_id,
-                'Deja de mandarme cosas raras pls.')
-            return
-
-        # Dejo esto comentado, pero ahora
-        # manda unicamente el submission_info + link
-        # if 'imgur' in link_url \
-        #     and 'gif' not in link_url \
-        #         and '/a/' not in link_url:
-            # url_parts = list(urlparse.urlparse(link_url))
-        #     if 'i.' not in url_parts[1]:
-        #         url_parts[1] = "i." + url_parts[1]
-        #         url_parts[2] = url_parts[2] + ".jpg"
-        #         link_url = urlparse.urlunparse(url_parts)
-
-        #     # Guardo la imagen
-        #     save_image(link_url)
-
-        #     # Envio
-        #     files = {'photo': (IMAGE_PATH, open(IMAGE_PATH, "rb"))}
-        #     requests.post(
-        #         REQUEST_URL + '/sendPhoto',
-        #         data={'chat_id' : chat_id, 'caption' : submission_info},
-        #         files=files)
-
-        #     # Delete al archivo
-        #     os.remove(IMAGE_PATH)
-
-        # elif '.gif' in link_url or 'gfycat' in link_url:
-            # bot_send_msg(
-            #     chat_id,
-            #     'Un gif! ' +
-            #     submission_info +
-            #     '  ' + link_url)
-        # else:
-        bot_send_msg(chat_id, submission_info + '  ' + link_url)
+        submissions = fetch_submissions(subreddit)
+        for submission in submissions:
+            link_url = submission.url
+            submission_info = '\'' + submission.title + '\'' +\
+                ' by ' + str(submission.author) +\
+                ' (' + str(submission.score) + ')'
+        
+        if submission_info == '':
+            bot_send_msg(chat_id, 'No encontre nada interesante')
+        else:
+            bot_send_msg(chat_id, submission_info + '  ' + link_url)
     else:
         bot_send_msg(chat_id, 'Me tenes que pasar un subreddit troesma.')
-
-# Unused
-# def save_image(img_url):
-#     image = open(IMAGE_PATH, 'wb')
-#     image.write(urllib.urlopen(img_url).read())
-#     image.close()
-#
-# def save_gif(gif_url):
-#     url_gif = urllib2.urlopen(gif_url)
-#     gif = open(GIF_PATH, 'w+')
-#     gif.write(url_gif.read())
-#     gif.close()
 
 
 def procesar_inline_query(inline_query):
@@ -229,59 +208,37 @@ def procesar_inline_query(inline_query):
     Handling de los inline querys.
 
     Envia como respuesta los 15 mejores tops de la semana del subreddit
-    indicado, con thumnail segun corresponda.
+    indicado, con thumbnail segun corresponda.
     """
     query = inline_query['query']
     query_id = inline_query['id']
     if query != '' and query[-1] != '_':
-        try:
-            subreddit = REDDIT.get_subreddit(query, fetch=True)
-        except praw.errors.HTTPException as http_exception:
-            print ('NaS - ' + str(http_exception))
+        subreddit = fetch_subreddit(query)
+        if subreddit is None:
             return
-        except praw.errors.InvalidSubreddit as invalid_subreddit_exception:
-            print ('Invalid subreddit - ' + str(invalid_subreddit_exception))
-            return
-        except:
-            print ('UNKNOWN EXCEPTION OCURRED AT INLINE_QUERY')
-            return
-
-        data = []
-        i = 1
-        for submission in subreddit.get_top_from_week(limit=15):
-            inline_query_result = {}
-            submission_info = '\'' + submission.title + '\'' \
-                + ' by ' + str(submission.author) \
-                + ' (' + str(submission.score) + ')'
-            inline_query_result['type'] = 'article'
-            inline_query_result['id'] = str(i)
-            i += 1
-            inline_query_result['title'] = submission.title
-            inline_query_result['input_message_content'] = \
-                {'message_text': submission_info + ' ' + submission.url}
-            if not submission.is_self \
-                and str(submission.thumbnail) != 'self' \
-                and str(submission.thumbnail) != 'nsfw' \
-                    and str(submission.thumbnail) != 'default':
-                inline_query_result['thumb_url'] = str(submission.thumbnail)
-            data.append(inline_query_result)
-
-        response = requests.post(
-            REQUEST_URL + '/answerInlineQuery',
-            params={'inline_query_id': query_id, 'results': json.dumps(data)})
-        response_json = json.loads(response.text)
-        if not response_json['ok']:
-            print ('Invalid answer sent!')
-            print ('Error code: ' + str(response_json['error_code']))
-            print ('Description: ' + response_json['description'])
-            if 'THUMB_URL_INVALID' in response_json['description']:
-                for answer in data:
-                    if 'thumb_url' in answer:
-                        print ('thumb_url: ' + answer['thumb_url'])
-
     elif query == '':
-        pass
-        # TODO : Trending subreddits?
+        subreddit = fetch_subreddit('all')
+        if subreddit is None:
+            return
+    else:
+        print ('Subreddit invalido.')
+        return
+
+    data = get_inline_list_from_subreddit(subreddit)
+
+    response = requests.post(
+        REQUEST_URL + '/answerInlineQuery',
+        params={'inline_query_id': query_id, 'results': json.dumps(data)})
+    response_json = json.loads(response.text)
+
+    if not response_json['ok']:
+        print ('Invalid answer sent!')
+        print ('Error code: ' + str(response_json['error_code']))
+        print ('Description: ' + response_json['description'])
+        if 'THUMB_URL_INVALID' in response_json['description']:
+            for answer in data:
+                if 'thumb_url' in answer:
+                    print ('thumb_url: ' + answer['thumb_url'])
 
 
 def signal_handler(sign, frame):
