@@ -30,10 +30,14 @@ IMAGE_PATH = 'out.jpg'
 GIF_PATH = 'out.gif'
 
 # Reddit PRAW initialization
+CLIENT_ID_FILE = open(sys.argv[2], 'r')
+CLIENT_SECRET_FILE = open(sys.argv[3], 'r')
 UA = "Linux:redditop.telegram:v1.0 (by /u/genericargentine)"
-REDDIT = praw.Reddit(client_id='JPwiqtbkXnI2tg',
-                     client_secret='GYCW_QMY3t3vD5uTw91lYQLQYSk',
+REDDIT = praw.Reddit(client_id=CLIENT_ID_FILE.read().rstrip('\n'),
+                     client_secret=CLIENT_SECRET_FILE.read().rstrip('\n'),
                      user_agent=UA)
+CLIENT_SECRET_FILE.close()
+CLIENT_ID_FILE.close()
 
 
 def main():
