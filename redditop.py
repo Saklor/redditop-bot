@@ -16,8 +16,8 @@ import praw
 import requests
 
 # REQUEST_URL formatting
-if len(sys.argv) == 1:
-    print ('Usage: redditop_bot.py [TOKEN_FILE]')
+if len(sys.argv) < 4:
+    print ('Usage: redditop_bot.py [TOKEN_FILE] [CLIENT_ID_FILE] [CLIENT_SECRET_FILE]')
     sys.exit()
 TOKEN_FILE = open(sys.argv[1], 'r')
 REQUEST_URL = "https://api.telegram.org/bot" + TOKEN_FILE.read().rstrip('\n')
@@ -42,8 +42,7 @@ CLIENT_ID_FILE.close()
 
 def main():
     """Main update loop."""
-    # Request inicial para limpiar pedidos
-    # colgados mientras estuvo apagado el bot.
+    # Request inicial para limpiar pedidos colgados mientras estuvo apagado el bot.
     last_update_id = 0
     validjson = True
     update_request = requests.get(
@@ -52,8 +51,8 @@ def main():
 
     try:
         data = json.loads(update_request.text)
-    except ValueError, e:
-        print "Invalid JSON Object, " + str(e)
+    except (ValueError, e):
+        print ("Invalid JSON Object, " + str(e))
         validjson = False
     else:
         validjson = True
@@ -64,18 +63,22 @@ def main():
     while True:
         update_request = requests.get(
             REQUEST_URL + '/getUpdates',
-            params={'offset': last_update_id, 'timeout': 120})
+            params={
+                'offset': last_update_id,
+                'timeout': 120,
+                'allowed_updates' : ['message', 'inline_query']
+            })
 
         try:
             data = json.loads(update_request.text)
-        except ValueError, e:
-            print "Invalid JSON Object, " + str(e)
+        except (ValueError, e):
+            print ("Invalid JSON Object, " + str(e))
             validjson = False
         else:
             validjson = True
 
         if not validjson:
-            print "Invalid JSON"
+            print ("Invalid JSON")
         elif data['ok'] and data['result'] != []:
             result = data['result'][0]
             update_id = result['update_id']
@@ -85,7 +88,7 @@ def main():
                 try:
                     print (message['text'])
                 except:
-                    print "Oops, no pude imprimir el texto."
+                    print ("Invalid message text")
 
                 if '/dametop' in message['text'].lower():
                     dame_top(message)
@@ -121,8 +124,6 @@ def fetch_subreddit(query):
         print ('API Exception - ' + str(api_exception))
     except praw.exceptions.ClientException as client_exception:
         print ('Client Exception - ' + str(client_exception))
-    # except praw.exceptions.PRAWException as praw_exception:
-    #     print ('PRAW Exception - ' + str(praw_exception))
     except:
         print ('Unknown exception when fetching ' + str(query))
     return subreddit
@@ -148,6 +149,7 @@ def fetch_submissions(subreddit, lim=1):
         print ('Exception parsing submissions from subreddit ' + str(subreddit.display_name))
 
     return submissions
+
 
 def get_inline_list_from_subreddit(subreddit):
     data = []
@@ -252,7 +254,6 @@ def signal_handler(sign, frame):
     print ('Ctrl+C pressed. Exiting.')
     sys.exit(0)
 
-# Catch SIGINT using signal_handler
 signal.signal(signal.SIGINT, signal_handler)
 
 if __name__ == '__main__':
