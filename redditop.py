@@ -25,10 +25,6 @@ TOKEN_FILE.close()
 
 print (REQUEST_URL)
 
-# Paths
-IMAGE_PATH = 'out.jpg'
-GIF_PATH = 'out.gif'
-
 # Reddit PRAW initialization
 CLIENT_ID_FILE = open(sys.argv[2], 'r')
 CLIENT_SECRET_FILE = open(sys.argv[3], 'r')
@@ -91,10 +87,10 @@ def main():
                     print ("Invalid message text")
 
                 if '/dametop' in message['text'].lower():
-                    dame_top(message)
+                    handle_dame_top(message)
             elif 'inline_query' in result:
                 print (result['inline_query']['query'])
-                procesar_inline_query(result['inline_query'])
+                handle_inline_query(result['inline_query'])
             else:
                 print ('Unknown update!')
 
@@ -176,7 +172,7 @@ def get_inline_list_from_subreddit(subreddit):
     return data
 
 
-def dame_top(message):
+def handle_dame_top(message):
     """
     Handling del comando /dametop.
 
@@ -209,7 +205,7 @@ def dame_top(message):
         bot_send_msg(chat_id, 'Me tenes que pasar un subreddit troesma.')
 
 
-def procesar_inline_query(inline_query):
+def handle_inline_query(inline_query):
     """
     Handling de los inline querys.
 
