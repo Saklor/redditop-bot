@@ -47,8 +47,8 @@ def main():
 
     try:
         data = json.loads(update_request.text)
-    except (ValueError, e):
-        print ("Invalid JSON Object, " + str(e))
+    except json.decoder.JSONDecodeError:
+        print ("Invalid JSON Object.")
         validjson = False
     else:
         validjson = True
@@ -61,14 +61,14 @@ def main():
             REQUEST_URL + '/getUpdates',
             params={
                 'offset': last_update_id,
-                'timeout': 120,
+                'timeout': 3600,
                 'allowed_updates' : ['message', 'inline_query']
             })
 
         try:
             data = json.loads(update_request.text)
-        except (ValueError, e):
-            print ("Invalid JSON Object, " + str(e))
+        except json.decoder.JSONDecodeError:
+            print ("Invalid JSON Object.")
             validjson = False
         else:
             validjson = True
