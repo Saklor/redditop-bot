@@ -47,8 +47,8 @@ def main():
 
     try:
         data = json.loads(update_request.text)
-    except (ValueError, e):
-        print ("Invalid JSON Object, " + str(e))
+    except json.decoder.JSONDecodeError:
+        print ("Invalid JSON Object.")
         validjson = False
     else:
         validjson = True
@@ -67,8 +67,8 @@ def main():
 
         try:
             data = json.loads(update_request.text)
-        except (ValueError, e):
-            print ("Invalid JSON Object, " + str(e))
+        except json.decoder.JSONDecodeError:
+            print ("Invalid JSON Object.")
             validjson = False
         else:
             validjson = True
