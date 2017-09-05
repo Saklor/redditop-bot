@@ -61,7 +61,7 @@ def main():
             REQUEST_URL + '/getUpdates',
             params={
                 'offset': last_update_id,
-                'timeout': 120,
+                'timeout': 3600,
                 'allowed_updates' : ['message', 'inline_query']
             })
 
