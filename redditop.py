@@ -133,8 +133,6 @@ def fetch_submissions(subreddit, lim=1):
         print ('API Exception - ' + str(api_exception))
     except praw.exceptions.ClientException as client_exception:
         print ('Client Exception - ' + str(client_exception))
-    # except praw.exceptions.PRAWException as praw_exception:
-    #     print ('PRAW Exception - ' + str(praw_exception))
     except:
         print ('Unknown exception when fetching submissions from subreddit ' + str(subreddit.display_name))
 
